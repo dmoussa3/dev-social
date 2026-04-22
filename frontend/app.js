@@ -51,6 +51,7 @@ async function displayUsers(users) {
             <h3>${user.username}</h3>
             <p>ID: ${user.id}</p>
             <p>Email: ${user.email}</p>
+            <p>Role: ${user.role}</p>
             <p>Joined: ${new Date(user.created_at).toLocaleDateString()}</p>
             <p>Active: ${user.is_active ? "Yes" : "No"}</p>
         </div>
@@ -86,10 +87,12 @@ async function updateUser(event) {
 
     const newUsername = document.getElementById("edit-username").value;
     const newEmail = document.getElementById("edit-email").value;
+    const newRole = document.getElementById("edit-role").value;
 
     const body = {};
     if (newUsername != currentUser.username) { body.username = newUsername; }
     if (newEmail != currentUser.email) { body.email = newEmail; }
+    if (newRole != currentUser.role) { body.role = newRole; }
 
     if (Object.keys(body).length === 0) {
         alert("No changes provided.");
@@ -171,9 +174,10 @@ async function createUser(event) {
     const username = document.getElementById("create-username").value;
     const email = document.getElementById("create-email").value;
     const password = document.getElementById("create-password").value;
+    const role = document.getElementById("role-selector").value;
 
-    if (!username || !email || !password) {
-        alert("Please enter username, email, and password.");
+    if (!username || !email || !password || !role) {
+        alert("Please fill in all fields.");
         return;
     }
 
@@ -181,7 +185,7 @@ async function createUser(event) {
         const response = await fetch(`${API_URL}/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify({ username, email, password, role })
         });
 
         if (!response.ok) {
@@ -384,6 +388,7 @@ function showEditModal() {
 
     document.getElementById("edit-username").value = currentUser.username;
     document.getElementById("edit-email").value = currentUser.email;
+    document.getElementById("edit-role").value = currentUser.role;
 
     document.getElementById("edit-profile-modal").classList.remove("hidden");
 }

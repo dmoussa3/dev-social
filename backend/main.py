@@ -195,7 +195,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already exists")
 
     hashed_password = hash_password(user.password)
-    db_user = User(username=user.username, email=user.email, password_hash=hashed_password)
+    db_user = User(username=user.username, email=user.email, password_hash=hashed_password, role=user.role)
 
     db.add(db_user)
     db.commit()

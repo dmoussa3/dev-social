@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
+    role: str
     is_active: bool = True
 
 class UserLogin(BaseModel):
@@ -24,6 +25,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
+    role: str
     is_active: bool
     created_at: datetime
 
@@ -34,6 +36,7 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     is_active: bool = True
+    role: Optional[str] = None
 
 class PostCreate(BaseModel):
     title: str
@@ -54,6 +57,7 @@ class UserWithPosts(BaseModel):
     id: int
     username: str
     email: str
+    role: str
     created_at: datetime
     posts: List[PostResponse] = []  # List of user's posts
     
