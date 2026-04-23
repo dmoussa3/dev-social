@@ -118,13 +118,64 @@ async function updateUser(event) {
         const updatedUser = await response.json();
         currentUser = updatedUser; // Update current user info with the response
 
-        document.getElementById("current-user").textContent = `${updatedUser.username}`;
+        document.getElementById("current-user").textContent = `${updatedUser.username} - ${updatedUser.role}`;
 
         console.log("User updated: ", updatedUser.username);
         alert("Profile updated successfully.");
         closeEditModal();
     } catch (error) {
         console.error("Error updating user:", error);
+        alert(`ERROR: ${error.message}`);
+    }
+}
+
+async function updateUserPassword(event) {
+    event.preventDefault();
+
+    if(!currentUser) {
+        alert("No user is currently logged in.");
+        return;
+    }
+
+    const oldPassword = document.getElementById("current-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-new-password").value;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        alert("Please fill in all password fields.");
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        alert("New password and confirmation do not match.");
+        return;
+    }
+
+    if (newPassword == oldPassword) {
+        alert("New password cannot be the same as the current password.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/users/${currentUser.id}`, {
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ password: newPassword })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(parseError(errorData.detail) || `HTTP error! status: ${response.status}`);
+        }
+
+        alert("Password updated successfully.");
+        document.getElementById("update-password-form").reset();
+        document.getElementById("edit-password-modal").classList.add("hidden");
+    } catch (error) {
+        console.error("Error updating password:", error);
         alert(`ERROR: ${error.message}`);
     }
 }
@@ -398,6 +449,19 @@ function closeEditModal() {
     document.getElementById("edit-profile-form").reset();
 }
 
+function showUpdatePasswordModal() {
+        if (!currentUser) { return; }
+
+        document.getElementById("edit-profile-modal").classList.add("hidden");
+        document.getElementById("edit-password-modal").classList.remove("hidden");
+}
+
+function closeUpdatePasswordModal() {
+    document.getElementById("edit-password-modal").classList.add("hidden");
+    document.getElementById("update-password-form").reset();
+    document.getElementById("edit-profile-modal").classList.remove("hidden");
+}
+
 // AUTH functions
 function getToken() { return localStorage.getItem("access_token"); }
 
@@ -469,7 +533,7 @@ async function loadCurrentUser() {
 
         console.log("Current user data:", userData);
 
-        document.getElementById("current-user").textContent = `${userData.username}`;
+        document.getElementById("current-user").textContent = `${userData.username} - ${userData.role}`;
     } catch (error) {
         console.error("Error loading user: ", error);
         logout(); // Clear token and show auth UI if there's an error loading current user
@@ -516,6 +580,25 @@ function setUpEventListeners() {
     document.getElementById('edit-profile-modal')?.addEventListener("click", function(e) {
         if (e.target === this) {
             closeEditModal();
+        }
+    });
+    
+    const updatePasswordBtn = document.getElementById("update-password-btn");
+    if (updatePasswordBtn) {
+        updatePasswordBtn.addEventListener("click", showUpdatePasswordModal);
+    }
+
+    const editPasswordForm = document.getElementById("update-password-form");
+    if (editPasswordForm) {
+        editPasswordForm.addEventListener("submit", updateUserPassword);
+    }
+
+    document.querySelector(".close-password-modal")?.addEventListener("click", closeUpdatePasswordModal);
+    document.querySelector(".cancel-password-modal")?.addEventListener("click", closeUpdatePasswordModal);
+
+    document.getElementById('edit-password-modal')?.addEventListener("click", function(e) {
+        if (e.target === this) {
+            closeUpdatePasswordModal();
         }
     });
 

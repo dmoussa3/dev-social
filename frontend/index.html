@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="ds_logo.png">
+
     <title>Dev Social</title>
     <style>
         * {
@@ -29,13 +31,35 @@
             display: none;
         }
 
-        input {
+        input,
+        select,
+        textarea {
             padding: 10px;
             margin: 5px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            width: 200px;
             font-size: 14px;
+            background: #fff;
+            color: #222;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+        }
+
+        input,
+        select {
+            width: 200px;
+        }
+
+        textarea {
+            width: 100%;
+            resize: vertical;
         }
 
         button {
@@ -199,6 +223,20 @@
             color: #333;
         }
 
+        .close-password-modal {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-password-modal:hover {
+            color: #333;
+        }
+
         .modal-content label {
             display: block;
             margin-top: 15px;
@@ -211,10 +249,64 @@
             margin-bottom: 10px;
         }
 
+        .modal-content select {
+            width: 100%;
+            margin-bottom: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, #667085 50%), linear-gradient(135deg, #667085 50%, transparent 50%);
+            background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            padding-right: 36px;
+        }
+
+        #role-selector,
+        #edit-role {
+            width: 100%;
+            max-width: 320px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, #667085 50%), linear-gradient(135deg, #667085 50%, transparent 50%);
+            background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            padding-right: 36px;
+        }
+
+        #role-selector:hover,
+        #edit-role:hover {
+            border-color: #b7c4d6;
+        }
+
+        #role-selector:focus,
+        #edit-role:focus {
+            border-color: #007bff;
+        }
+
         .modal-actions {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-top: 20px;
+            width: 100%;
+        }
+
+        .modal-actions button {
+            flex: 1 1 140px;
+            min-width: 0;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        #delete-btn {
+            background: #dc3545;
+        }
+
+        #delete-btn:hover {
+            background: #c82333;
         }
 
         .cancel-modal {
@@ -224,6 +316,15 @@
         .cancel-modal:hover {
             background: #5a6268;
         }
+
+        .cancel-password-modal {
+            background: #6c757d;
+        }
+
+        .cancel-password-modal:hover {
+            background: #5a6268;
+        }
+
     </style>
 </head>
 <body>
@@ -275,22 +376,28 @@
 
         <div class="current-user">
             <h2>Logged in as: <span id="current-user"></span></h2>
-            <button class="logout-btn" id="logout-btn">Logout</button>
-            <button class="update-btn" id="update-btn">Update Account</button>
+            <button class="logout-btn" id="logout-btn">Logout </button>
+            <button class="update-btn" id="update-btn">Account Settings ⚙️</button>
        </div>
 
         <div class="tabs">
-            <div class="tab active" data-tab="post">Post</div>
+            <div class="tab active" data-tab="post">Feed</div>
             <div class="tab" data-tab="search-user">Search Users</div>
         </div>
 
+        <!---- UPDATE PROFILE MODAL ---->
        <div id="edit-profile-modal" class="modal hidden">
             <div class="modal-content">
                 <span class="close-modal">&times;</span>
                 <h2>Update Your Profile</h2>
                 <form id="edit-profile-form">
+                    <label for="edit-username">Username:</label>
                     <input type="text" id="edit-username" placeholder="New Username">
+
+                    <label for="edit-email">Email:</label>
                     <input type="email" id="edit-email" placeholder="New Email">
+
+                    <label for="edit-role">Role:</label>
                     <select id="edit-role">
                         <option value="" disabled selected>Select Role</option>
                         <option>Data Engineer</option>
@@ -307,11 +414,29 @@
                     <div class="modal-actions">
                         <button type="submit">Save Changes</button>
                         <button type="button" class="cancel-modal">Cancel</button>
+                        <button type="button" id="delete-btn">Delete Account</button>
+                        <button type="button" id="update-password-btn">Update Password</button>
                     </div>
                 </form>
             </div>
        </div>
        
+       <!--- UPDATE PASSWORD MODAL -->
+       <div id="edit-password-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-password-modal">&times;</span>
+                <h2>Update Your Password</h2>
+                <form id="update-password-form">
+                    <input type="password" id="current-password" placeholder="Current Password" required>
+                    <input type="password" id="new-password" placeholder="New Password" required>
+                    <input type="password" id="confirm-new-password" placeholder="Confirm New Password" required>
+                    <button type="submit">Update Password</button>
+                    <button type="button" class="cancel-password-modal">Cancel</button>
+                </form>
+            </div>
+       </div>
+
+       <!--- POST UI -->
        <div id="post-ui" class="posts-class">
             <h1>Create a Post</h1>
 

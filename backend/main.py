@@ -47,24 +47,6 @@ def root():
 
 # =================================== User endpoints ===================================
 
-@app.post("/api/users", response_model=UserResponse, status_code=201)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    query = db.query(User).filter((User.username == user.username) | (User.email == user.email)).first()
-
-    if query:
-        raise HTTPException(status_code=400, detail="Username or email already exists")
-    
-    valid = validate_email(user.email)
-    
-    if not valid:
-        raise HTTPException(status_code=400, detail="Invalid email format")
-
-    db_user = User(username=user.username, email=user.email, is_active=user.is_active)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
 # REQUIRES AUTHENTICATION/LOGIN
 @app.get("/api/users", response_model=List[UserResponse])
 def read_users(db: Session = Depends(get_db), search: Optional[str] = None, current_user: User = Depends(get_current_active_user)):
@@ -93,11 +75,19 @@ def update_user(user_id: int, user: UserUpdate, current_user: User = Depends(get
     if user.username and user.username != db_user.username:
         if db.query(User).filter(User.username == user.username).first():
             raise HTTPException(status_code=400, detail="Username already exists")
-    
+
     if user.email and user.email != db_user.email:
+        valid = validate_email(user.email)
+    
+        if not valid:
+            raise HTTPException(status_code=400, detail="Invalid email format")
+    
         if db.query(User).filter(User.email == user.email).first():
             raise HTTPException(status_code=400, detail="Email already exists")
-        
+    
+    if user.password:
+        db_user.password_hash = hash_password(user.password) #type: ignore
+
     updated_fields = user.model_dump(exclude_unset=True)
     for key, value in updated_fields.items():
         setattr(db_user, key, value)

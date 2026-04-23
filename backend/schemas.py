@@ -37,6 +37,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     is_active: bool = True
     role: Optional[str] = None
+    password: Optional[str] = None
 
 class PostCreate(BaseModel):
     title: str
