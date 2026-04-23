@@ -1,0 +1,12 @@
+backend/dev_social_db
+backend/dev_social_db.sqlite
+backend/dev_social_db.sqlite3
+backend/__pycache__/
+venv/
+backend/alembic/
+backend/alembic.ini
+*.log
+*.env
+.DS_Store
+node_modules/
+.vscode/
