@@ -48,10 +48,10 @@ async function displayUsers(users) {
     
     usersContainer.innerHTML = users.map(user => `
         <div class="user-card">
-            <h3>${user.username}</h3>
+            <h3>${escapeHtml(user.username)}</h3>
             <p>ID: ${user.id}</p>
-            <p>Email: ${user.email}</p>
-            <p>Role: ${user.role}</p>
+            <p>Email: ${escapeHtml(user.email)}</p>
+            <p>Role: ${escapeHtml(user.role)}</p>
             <p>Joined: ${new Date(user.created_at).toLocaleDateString()}</p>
             <p>Active: ${user.is_active ? "Yes" : "No"}</p>
         </div>
@@ -62,7 +62,16 @@ async function deleteUser(userId) {
     if (!confirm("Are you sure you want to delete this user?")) { return; }
 
     try {
-        const response = await fetch(`${API_URL}/users/${userId}`, { method: "DELETE" });
+        const response = await fetch(`${API_URL}/users/${userId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+
+        if (response.status === 401) {
+            alert("Session expired. Please log in again.");
+            logout();
+            return;
+        }
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -74,6 +83,31 @@ async function deleteUser(userId) {
     } catch (error) {
         console.error("Error deleting user:", error);
         alert("An error occurred while deleting the user.");
+    }
+}
+
+async function deleteAccount() {
+    if (!currentUser) { return; }
+
+    if (!confirm("Are you sure you want to delete your account? This cannot be undone.")) { return; }
+
+    try {
+        const response = await fetch(`${API_URL}/users/${currentUser.id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(parseError(errorData.detail) || `HTTP error! status: ${response.status}`);
+        }
+
+        alert("Account deleted.");
+        closeEditModal();
+        logout();
+    } catch (error) {
+        console.error("Error deleting account:", error);
+        alert(`ERROR: ${error.message}`);
     }
 }
 
@@ -576,6 +610,11 @@ function setUpEventListeners() {
 
     document.querySelector(".close-modal")?.addEventListener("click", closeEditModal);
     document.querySelector(".cancel-modal")?.addEventListener("click", closeEditModal);
+
+    const deleteBtn = document.getElementById("delete-btn");
+    if (deleteBtn) {
+        deleteBtn.addEventListener("click", deleteAccount);
+    }
 
     document.getElementById('edit-profile-modal')?.addEventListener("click", function(e) {
         if (e.target === this) {
