@@ -58,7 +58,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-> `requirements.txt` is a dump of a broader environment. At minimum you need: `fastapi`, `uvicorn`, `sqlalchemy`, `alembic`, `pydantic`, `email-validator`, `passlib[bcrypt]`, `python-jose`, `python-multipart`.
+Create a `backend/.env` file with at least a signing secret (the app fails to start without one):
+
+```
+SECRET_KEY=<a long random string, e.g. output of `openssl rand -hex 32`>
+SQL_ECHO=false
+```
+
+`SQL_ECHO` is optional and defaults to `false`; set it to `true` to log SQL statements during local debugging.
 
 Run the API:
 
@@ -74,10 +81,10 @@ The frontend is a static site with no build step. Serve the `frontend/` director
 
 ```bash
 cd frontend
-python3 -m http.server 5500
+python3 -m http.server 3000
 ```
 
-Then open `http://localhost:5500` in your browser. It expects the API at `http://localhost:8000/api` (see `API_URL` in `app.js`).
+Then open `http://localhost:3000` in your browser. It expects the API at `http://localhost:8000/api` (see `API_URL` in `app.js`). Use a port from the backend's CORS allowlist (`3000`, `5173`, or `8000` — see Notes below), or add your own port to `allow_origins` in `backend/main.py`.
 
 ## API Overview
 
@@ -112,5 +119,5 @@ alembic upgrade head
 
 ## Notes
 
-- The JWT secret in `auth.py` is a hardcoded placeholder — replace it with an environment-provided secret before deploying anywhere beyond local development.
-- CORS is currently wide open (`allow_origins=["*"]`) for local development convenience.
+- The JWT secret is read from the `SECRET_KEY` environment variable (via `backend/.env`); the app raises an error on startup if it isn't set. Rotating it invalidates all existing sessions.
+- CORS is restricted to `http://localhost:3000`, `http://localhost:5173`, and `http://localhost:8000` (see `app.add_middleware(CORSMiddleware, ...)` in `main.py`). Update this list if you serve the frontend from a different origin/port.
