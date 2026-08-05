@@ -33,7 +33,7 @@ app = FastAPI(title="Dev Social API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"],
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,

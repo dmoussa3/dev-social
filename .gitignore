@@ -10,3 +10,4 @@ backend/alembic.ini
 .DS_Store
 node_modules/
 .vscode/
+.claude/
