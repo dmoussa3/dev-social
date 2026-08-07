@@ -12,7 +12,7 @@ class User(Base):
     role = Column(String)
     password_hash = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now(UTC))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     posts = relationship("Post", back_populates="authorship", cascade="all, delete-orphan")
 
@@ -23,6 +23,6 @@ class Post(Base):
     title = Column(String, index=True)
     content = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.now(UTC))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     authorship = relationship("User", back_populates="posts")
