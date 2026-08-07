@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import validate_email
@@ -29,6 +29,12 @@ from schemas import (
     PostWithAuthor
 )
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="Dev Social API")
 
 app.add_middleware(
@@ -38,6 +44,9 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 Base.metadata.create_all(bind=engine)
 
@@ -177,7 +186,8 @@ def read_current_user_posts(current_user: User = Depends(get_current_active_user
 # ================================== Auth endpoints ========================================
 
 @app.post("/api/signup", response_model=UserResponse, status_code=201)
-def signup(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def signup(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == user.username).first():
         raise HTTPException(status_code=400, detail="Username already exists")
     
@@ -194,7 +204,8 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @app.post("/api/token", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == form_data.username).first()
 
     if not user or not verify_password(form_data.password, user.password_hash): #type: ignore

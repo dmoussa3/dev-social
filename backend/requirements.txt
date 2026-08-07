@@ -9,3 +9,4 @@ passlib==1.7.4
 bcrypt==5.0.0
 python-multipart==0.0.32
 python-dotenv==1.2.2
+slowapi==0.1.9
